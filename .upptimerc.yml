@@ -27,48 +27,24 @@ secrets:
   - NOTIFICATION_SMS_TWILIO_AUTH_TOKEN
   - NOTIFICATION_SMS_FROM
   - NOTIFICATION_SMS_TO
-  - GLOBALPING_TOKEN
 
 sites:
-  - name: Connect API — US
-    slug: api-us
+  - name: Connect API
+    slug: connect-api
     url: https://api.belora-connect.com/health
-    type: globalping
-    location: california
     expectedStatusCodes:
       - 200
     __dangerous__body_down_if_text_missing: "ok"
     maxResponseTime: 3000
 
-  - name: Voice Translation — US
-    slug: translation-us
+  - name: Voice Translation
+    slug: voice-translation
     url: https://api.belora-connect.com/ready
-    type: globalping
-    location: california
     expectedStatusCodes:
       - 200
     __dangerous__body_down_if_text_missing: "ok"
     maxResponseTime: 3000
 
-  - name: Voice Translation — Europe
-    slug: translation-europe
-    url: https://api.belora-connect.com/ready
-    type: globalping
-    location: Berlin
-    expectedStatusCodes:
-      - 200
-    __dangerous__body_down_if_text_missing: "ok"
-    maxResponseTime: 3000
-
-  - name: Voice Translation — Asia
-    slug: translation-asia
-    url: https://api.belora-connect.com/ready
-    type: globalping
-    location: Singapore
-    expectedStatusCodes:
-      - 200
-    __dangerous__body_down_if_text_missing: "ok"
-    maxResponseTime: 3000
 status-website:
   cname: status.belora-connect.com
   name: Connect Status
