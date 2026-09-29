@@ -22,6 +22,6 @@ sites:
     maxResponseTime: 3000
 
 status-website:
-  baseUrl: /connect-status
-  name: Connect Status
-  introTitle: "**Connect** service status"
+   cname: status.belora-connect.com
+   name: Connect Status
+   introTitle: "**Connect** service status"
