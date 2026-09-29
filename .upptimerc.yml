@@ -3,25 +3,74 @@ repo: connect-status
 user-agent: beloralabs-connect
 skipDeleteIssues: true
 
+secrets:
+  - NOTIFICATION_SLACK
+  - NOTIFICATION_SLACK_WEBHOOK_URL
+  - NOTIFICATION_TELEGRAM
+  - NOTIFICATION_TELEGRAM_BOT_KEY
+  - NOTIFICATION_TELEGRAM_CHAT_ID
+  - NOTIFICATION_DISCORD_WEBHOOK_URL
+  - NOTIFICATION_TEAMS
+  - NOTIFICATION_TEAMS_WEBHOOK_URL
+  - NOTIFICATION_EMAIL
+  - NOTIFICATION_EMAIL_FROM
+  - NOTIFICATION_EMAIL_TO
+  - NOTIFICATION_EMAIL_SMTP
+  - NOTIFICATION_EMAIL_SMTP_HOST
+  - NOTIFICATION_EMAIL_SMTP_PORT
+  - NOTIFICATION_EMAIL_SMTP_USERNAME
+  - NOTIFICATION_EMAIL_SMTP_PASSWORD
+  - NOTIFICATION_CUSTOM_WEBHOOK
+  - NOTIFICATION_CUSTOM_WEBHOOK_URL
+  - NOTIFICATION_SMS_TWILIO
+  - NOTIFICATION_SMS_TWILIO_ACCOUNT_SID
+  - NOTIFICATION_SMS_TWILIO_AUTH_TOKEN
+  - NOTIFICATION_SMS_FROM
+  - NOTIFICATION_SMS_TO
+  - GLOBALPING_TOKEN
+
 sites:
-  - name: Site web
-    slug: site-web
-    url: https://www.belora-connect.com
-  - name: Administration
-    slug: admin
-    url: https://admin.belora-connect.com
-  - name: API
-    slug: api
+  - name: Connect API — US
+    slug: api-us
     url: https://api.belora-connect.com/health
-  - name: API (services internes)
-    slug: api-ready
-    url: https://api.belora-connect.com/ready
-  - name: Cartesia
-    slug: cartesia
-    url: https://api.cartesia.ai/
+    type: globalping
+    location: california
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: "ok"
     maxResponseTime: 3000
 
+  - name: Voice Translation — US
+    slug: translation-us
+    url: https://api.belora-connect.com/ready
+    type: globalping
+    location: california
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: "ok"
+    maxResponseTime: 3000
+
+  - name: Voice Translation — Europe
+    slug: translation-europe
+    url: https://api.belora-connect.com/ready
+    type: globalping
+    location: Berlin
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: "ok"
+    maxResponseTime: 3000
+
+  - name: Voice Translation — Asia
+    slug: translation-asia
+    url: https://api.belora-connect.com/ready
+    type: globalping
+    location: Singapore
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: "ok"
+    maxResponseTime: 3000
 status-website:
-   cname: status.belora-connect.com
-   name: Connect Status
-   introTitle: "**Connect** service status"
+  cname: status.belora-connect.com
+  name: Connect Status
+  introTitle: "**Connect** service status"
+  introMessage: "Live availability for the Connect API and voice translation engine."
