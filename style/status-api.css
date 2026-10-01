@@ -1,0 +1,180 @@
+:root {
+    --api-green: #08a66c;
+    --api-green-dark: #087b54;
+    --api-ink: #152026;
+    --api-muted: #5b6b73;
+    --api-line: #d1d9dc;
+    --api-page: #f5f6f6;
+    --api-code: #f8faf9;
+}
+
+* { box-sizing: border-box; }
+
+body.public-api-page {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--api-page);
+    color: var(--api-ink);
+    font-family: "DM Sans", Arial, Helvetica, sans-serif;
+}
+
+.public-api-shell {
+    width: min(820px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 52px 0 80px;
+}
+
+.public-api-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.public-api-brand {
+    color: var(--api-ink);
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.public-api-back {
+    color: var(--api-muted);
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.public-api-back:hover { color: var(--api-green-dark); }
+
+.public-api-hero {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-height: 112px;
+    margin-bottom: 48px;
+    padding: 24px 35px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #08a66c 0%, #00ca6d 100%);
+    color: #fff;
+}
+
+.public-api-hero-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.55);
+    border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 19px;
+}
+
+.public-api-hero h1 {
+    margin: 0;
+    font-size: clamp(24px, 4vw, 31px);
+    font-weight: 600;
+    letter-spacing: -.5px;
+}
+
+.public-api-intro {
+    margin: -25px 0 34px;
+    color: var(--api-muted);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.public-api-endpoint {
+    margin-bottom: 44px;
+}
+
+.public-api-endpoint-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.public-api-method {
+    display: inline-flex;
+    align-items: center;
+    min-height: 31px;
+    padding: 0 11px;
+    border: 1px solid #a9e1c8;
+    border-radius: 5px;
+    background: #e9f9f1;
+    color: var(--api-green-dark);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.public-api-url {
+    overflow-wrap: anywhere;
+    color: var(--api-ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.public-api-copy {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+    place-items: center;
+    border: 1px solid var(--api-line);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--api-ink);
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.public-api-copy:hover { border-color: var(--api-green); color: var(--api-green-dark); }
+.public-api-copy.is-copied { border-color: var(--api-green); color: var(--api-green-dark); }
+
+.public-api-description {
+    margin: 0 0 30px;
+    color: var(--api-muted);
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.public-api-code {
+    overflow: auto;
+    max-height: 580px;
+    margin: 0;
+    padding: 23px 20px;
+    border: 1px solid var(--api-line);
+    border-radius: 16px;
+    background: var(--api-code);
+    color: #265145;
+    font: 14px/1.65 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    white-space: pre;
+}
+
+.public-api-note {
+    margin-top: 10px;
+    color: var(--api-muted);
+    font-size: 13px;
+}
+
+.public-api-footer {
+    padding-top: 12px;
+    border-top: 1px solid var(--api-line);
+    color: var(--api-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.public-api-footer a { color: var(--api-green-dark); }
+
+@media (max-width: 620px) {
+    .public-api-shell { padding-top: 24px; }
+    .public-api-hero { margin-bottom: 36px; padding: 22px; }
+    .public-api-endpoint-head { align-items: flex-start; flex-wrap: wrap; }
+    .public-api-copy { margin-left: 0; }
+}

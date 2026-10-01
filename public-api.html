@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BeLora Connect Public API</title>
+    <meta name="description" content="Public API documentation for BeLora Connect status and monitored services.">
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon/favicon.svg">
+    <link rel="stylesheet" href="./style/status-api.css?v=20261001-1">
+</head>
+<body class="public-api-page">
+    <main class="public-api-shell">
+        <div class="public-api-topbar">
+            <a class="public-api-brand" href="https://status.belora-connect.com/">BeLora Connect Status</a>
+            <a class="public-api-back" href="https://status.belora-connect.com/">Back to status</a>
+        </div>
+
+        <header class="public-api-hero">
+            <span class="public-api-hero-icon" aria-hidden="true">&lt;&gt;</span>
+            <h1>BeLora Connect Public API</h1>
+        </header>
+        <p class="public-api-intro">Use these public endpoints to display the current BeLora Connect status in your own dashboard, monitor, or integration.</p>
+
+        <section class="public-api-endpoint" aria-labelledby="summary-title">
+            <div class="public-api-endpoint-head">
+                <span class="public-api-method">GET</span>
+                <code class="public-api-url" id="summary-url">https://status.belora-connect.com/api/status</code>
+                <button class="public-api-copy" type="button" data-copy-target="summary-url" aria-label="Copy summary endpoint">⧉</button>
+            </div>
+            <p class="public-api-description" id="summary-title">Get the overall status and the current state of every monitored BeLora Connect service.</p>
+            <pre class="public-api-code" id="summary-response">Loading current status…</pre>
+        </section>
+
+        <section class="public-api-endpoint" aria-labelledby="rss-title">
+            <div class="public-api-endpoint-head">
+                <span class="public-api-method">GET</span>
+                <code class="public-api-url" id="rss-url">https://status.belora-connect.com/rss.xml</code>
+                <button class="public-api-copy" type="button" data-copy-target="rss-url" aria-label="Copy RSS endpoint">⧉</button>
+            </div>
+            <p class="public-api-description" id="rss-title">Subscribe to status changes with any RSS reader. The feed includes incidents, maintenance, and service updates.</p>
+            <p class="public-api-note"><a href="https://status.belora-connect.com/rss.xml" target="_blank" rel="noopener">Open the RSS feed</a></p>
+        </section>
+
+        <footer class="public-api-footer">The API is read-only and requires no authentication. <a href="https://status.belora-connect.com/">View live status</a>.</footer>
+    </main>
+    <script>
+        (function () {
+            var responseBox = document.getElementById('summary-response');
+            fetch('https://status.belora-connect.com/api/status', { headers: { Accept: 'application/json' }, cache: 'no-store' })
+                .then(function (response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
+                .then(function (payload) { responseBox.textContent = JSON.stringify(payload, null, 2); })
+                .catch(function () { responseBox.textContent = JSON.stringify({ error: 'Unable to load current status' }, null, 2); });
+
+            document.querySelectorAll('[data-copy-target]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var target = document.getElementById(button.getAttribute('data-copy-target'));
+                    if (!target) return;
+                    var copy = function () {
+                        button.classList.add('is-copied');
+                        button.textContent = '✓';
+                        setTimeout(function () { button.classList.remove('is-copied'); button.textContent = '⧉'; }, 1200);
+                    };
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(target.textContent).then(copy).catch(function () {});
+                    } else {
+                        var range = document.createRange();
+                        range.selectNodeContents(target);
+                        var selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        try { document.execCommand('copy'); copy(); } catch (error) {}
+                        selection.removeAllRanges();
+                    }
+                });
+            });
+        }());
+    </script>
+</body>
+</html>
