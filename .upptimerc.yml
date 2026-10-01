@@ -31,11 +31,11 @@ secrets:
 sites:
   - name: Connect API
     slug: connect-api
-    url: https://api.belora-connect.com/status-test-inexistant
+    url: https://api.belora-connect.com/health
     expectedStatusCodes:
       - 200
     __dangerous__body_down_if_text_missing: "ok"
-    maxResponseTime: 1500
+    maxResponseTime: 1
 
   - name: Voice Translation
     slug: voice-translation
