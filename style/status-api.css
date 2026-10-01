@@ -1,4 +1,7 @@
 :root {
+    --api-indigo: #3f51b5;
+    --api-indigo-dark: #2f3f9c;
+    --api-indigo-soft: #eef0fa;
     --api-green: #08a66c;
     --api-green-dark: #087b54;
     --api-ink: #152026;
@@ -33,19 +36,19 @@ body.public-api-page {
 }
 
 .public-api-brand {
-    color: var(--api-ink);
-    font-size: 15px;
+    color: var(--api-indigo-dark);
+    font-size: 1rem;
     font-weight: 700;
     text-decoration: none;
 }
 
 .public-api-back {
-    color: var(--api-muted);
+    color: var(--api-indigo-dark);
     font-size: 14px;
     text-decoration: none;
 }
 
-.public-api-back:hover { color: var(--api-green-dark); }
+.public-api-back:hover { color: var(--api-indigo); }
 
 .public-api-hero {
     display: flex;
@@ -55,7 +58,7 @@ body.public-api-page {
     margin-bottom: 48px;
     padding: 24px 35px;
     border-radius: 16px;
-    background: linear-gradient(135deg, #08a66c 0%, #00ca6d 100%);
+    background: linear-gradient(135deg, var(--api-indigo) 0%, #5667c7 100%);
     color: #fff;
 }
 
@@ -70,6 +73,12 @@ body.public-api-page {
     background: rgba(255,255,255,.18);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 19px;
+}
+
+.public-api-hero-icon svg {
+    width: 19px;
+    height: 19px;
+    stroke-width: 1.8;
 }
 
 .public-api-hero h1 {
@@ -133,8 +142,14 @@ body.public-api-page {
     font-size: 18px;
 }
 
-.public-api-copy:hover { border-color: var(--api-green); color: var(--api-green-dark); }
-.public-api-copy.is-copied { border-color: var(--api-green); color: var(--api-green-dark); }
+.public-api-copy svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.9;
+}
+
+.public-api-copy:hover { border-color: var(--api-indigo); color: var(--api-indigo-dark); }
+.public-api-copy.is-copied { border-color: var(--api-indigo); color: var(--api-indigo-dark); }
 
 .public-api-description {
     margin: 0 0 30px;
@@ -170,7 +185,11 @@ body.public-api-page {
     line-height: 1.6;
 }
 
-.public-api-footer a { color: var(--api-green-dark); }
+.public-api-note a,
+.public-api-footer a { color: var(--api-indigo-dark); }
+
+.public-api-note a:hover,
+.public-api-footer a:hover { color: var(--api-indigo); }
 
 @media (max-width: 620px) {
     .public-api-shell { padding-top: 24px; }
