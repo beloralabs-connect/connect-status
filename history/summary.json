@@ -1,22 +1,22 @@
 [
   {
     "name": "Connect API",
-    "url": "https://api.belora-connect.com/status-test-inexistant",
+    "url": "https://api.belora-connect.com/health",
     "icon": "https://icons.duckduckgo.com/ip3/api.belora-connect.com.ico",
     "slug": "connect-api",
-    "status": "down",
-    "uptime": "99.34%",
-    "uptimeDay": "99.17%",
-    "uptimeWeek": "99.34%",
-    "uptimeMonth": "99.34%",
-    "uptimeYear": "99.34%",
-    "time": 166,
-    "timeDay": 162,
-    "timeWeek": 166,
-    "timeMonth": 166,
-    "timeYear": 166,
+    "status": "degraded",
+    "uptime": "98.80%",
+    "uptimeDay": "98.50%",
+    "uptimeWeek": "98.80%",
+    "uptimeMonth": "98.80%",
+    "uptimeYear": "98.80%",
+    "time": 161,
+    "timeDay": 153,
+    "timeWeek": 161,
+    "timeMonth": 161,
+    "timeYear": 161,
     "dailyMinutesDown": {
-      "2026-10-01": 4,
+      "2026-10-01": 14,
       "2026-09-30": 8
     }
   },
@@ -31,11 +31,11 @@
     "uptimeWeek": "100.00%",
     "uptimeMonth": "100.00%",
     "uptimeYear": "100.00%",
-    "time": 184,
-    "timeDay": 174,
-    "timeWeek": 184,
-    "timeMonth": 184,
-    "timeYear": 184,
+    "time": 179,
+    "timeDay": 168,
+    "timeWeek": 179,
+    "timeMonth": 179,
+    "timeYear": 179,
     "dailyMinutesDown": {}
   }
 ]
