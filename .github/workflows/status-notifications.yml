@@ -5,14 +5,23 @@ on:
     types: [opened, edited]
   issue_comment:
     types: [created, edited]
+  workflow_run:
+    workflows: ["Uptime CI"]
+    types: [completed]
 
 permissions:
   contents: read
 
 jobs:
   notify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout status history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 100
+
       - name: Detect status or maintenance change and notify subscribers
         env:
           EVENT_JSON: ${{ toJson(github.event) }}
@@ -22,93 +31,161 @@ jobs:
         shell: bash
         run: |
           node <<'NODE'
+          const { execFileSync } = require("child_process");
+
           const event = JSON.parse(process.env.EVENT_JSON);
           const eventName = process.env.EVENT_NAME || "";
-          const issue = event.issue || {};
-          const source = event.comment?.body || issue.body || "";
-          const previous = event.changes?.body?.from || "";
-          const labels = (issue.labels || []).map((label) =>
-            String(label.name || "").toLowerCase()
-          );
-          const isMaintenance = labels.includes("maintenance");
-          const statusPattern = /Status\s*:\s*(Service unavailable|Down|Degraded|Operational|Resolved|Investigating|Identified|Resolving)/i;
-          const currentMatch = source.match(statusPattern);
-          const previousMatch = previous.match(statusPattern);
+          const statusNames = {
+            "service unavailable": "Service unavailable",
+            "down": "Down",
+            "degraded": "Degraded",
+            "up": "Operational",
+            "operational": "Operational",
+            "resolved": "Resolved",
+            "investigating": "Investigating",
+            "identified": "Identified",
+            "resolving": "Resolving"
+          };
 
-          let status = "";
-          let detail = "";
-
-          if (currentMatch) {
-            if (previousMatch &&
-                previousMatch[1].toLowerCase() === currentMatch[1].toLowerCase()) {
-              console.log("Status value did not change.");
-              process.exit(0);
+          function statusFromMessage(message) {
+            const value = String(message || "").toLowerCase();
+            if (/\b(service unavailable|down|outage|failed)\b/.test(value)) {
+              return "Down";
             }
-
-            const statusNames = {
-              "service unavailable": "Service unavailable",
-              "down": "Down",
-              "degraded": "Degraded",
-              "operational": "Operational",
-              "resolved": "Resolved",
-              "investigating": "Investigating",
-              "identified": "Identified",
-              "resolving": "Resolving"
-            };
-            status = statusNames[currentMatch[1].toLowerCase()];
-            detail = source
-              .replace(statusPattern, "")
-              .replace(/^\s+|\s+$/g, "")
-              .replace(/\n{3,}/g, "\n\n") ||
-              "A status update was published.";
-          } else if (
-            isMaintenance &&
-            eventName === "issues" &&
-            (event.action === "opened" || event.action === "edited")
-          ) {
-            const bodyChanged = event.action === "opened" ||
-              Boolean(event.changes?.body) ||
-              Boolean(event.changes?.title);
-            if (!bodyChanged) {
-              console.log("Maintenance fields did not change.");
-              process.exit(0);
+            if (/\b(degraded|slow)\b/.test(value)) {
+              return "Degraded";
             }
-
-            status = "Maintenance";
-            detail = (issue.body || "A planned maintenance window was published.")
-              .replace(/<!--([\s\S]*?)-->/g, "")
-              .replace(/[#*_]/g, "")
-              .replace(/\n{3,}/g, "\n\n")
-              .trim()
-              .slice(0, 1200);
-          } else {
-            console.log("No status or maintenance change in this event.");
-            process.exit(0);
+            if (/\b(up|operational|recovered)\b/.test(value)) {
+              return "Operational";
+            }
+            return "";
           }
 
-          const eventId = String(
-            event.comment?.id ||
-            (issue.id + "-" + (process.env.GITHUB_SHA || "issue"))
-          );
+          async function sendNotification(payload) {
+            const response = await fetch(process.env.NOTIFY_URL, {
+              method: "POST",
+              headers: {
+                "Authorization": "Bearer " + process.env.STATUS_NOTIFY_SECRET,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(payload)
+            });
+            const body = await response.text();
+            console.log(body);
+            if (!response.ok) {
+              throw new Error("Notification failed with HTTP " + response.status);
+            }
+          }
 
-          fetch(process.env.NOTIFY_URL, {
-            method: "POST",
-            headers: {
-              "Authorization": "Bearer " + process.env.STATUS_NOTIFY_SECRET,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              eventId,
+          async function main() {
+            if (eventName === "workflow_run") {
+              const files = [
+                ["history/connect-api.yml", "Connect API"],
+                ["history/voice-translation.yml", "Voice Translation"]
+              ];
+
+              const changes = [];
+              for (const [file, title] of files) {
+                let messages = [];
+                try {
+                  messages = execFileSync(
+                    "git",
+                    ["log", "-2", "--format=%s", "--", file],
+                    { encoding: "utf8" }
+                  ).trim().split("\n").filter(Boolean);
+                } catch {
+                  continue;
+                }
+
+                const current = statusFromMessage(messages[0]);
+                const previous = statusFromMessage(messages[1]);
+                if (current && previous && current !== previous) {
+                  changes.push({
+                    eventId: "monitor-" + file + "-" + messages[0],
+                    status: current,
+                    title,
+                    detail: messages[0],
+                    issueUrl: "https://status.belora-connect.com"
+                  });
+                }
+              }
+
+              if (!changes.length) {
+                console.log("No monitored service status transition.");
+                return;
+              }
+
+              for (const change of changes) {
+                await sendNotification(change);
+              }
+              return;
+            }
+
+            const issue = event.issue || {};
+            const source = event.comment?.body || issue.body || "";
+            const previous = event.changes?.body?.from || "";
+            const labels = (issue.labels || []).map((label) =>
+              String(label.name || "").toLowerCase()
+            );
+            const isMaintenance = labels.includes("maintenance");
+            const statusPattern = /Status\s*:\s*(Service unavailable|Down|Degraded|Operational|Resolved|Investigating|Identified|Resolving)/i;
+            const currentMatch = source.match(statusPattern);
+            const previousMatch = previous.match(statusPattern);
+
+            let status = "";
+            let detail = "";
+
+            if (currentMatch) {
+              if (previousMatch &&
+                  previousMatch[1].toLowerCase() === currentMatch[1].toLowerCase()) {
+                console.log("Status value did not change.");
+                return;
+              }
+
+              status = statusNames[currentMatch[1].toLowerCase()];
+              detail = source
+                .replace(statusPattern, "")
+                .replace(/^\s+|\s+$/g, "")
+                .replace(/\n{3,}/g, "\n\n") ||
+                "A status update was published.";
+            } else if (
+              isMaintenance &&
+              eventName === "issues" &&
+              (event.action === "opened" || event.action === "edited")
+            ) {
+              const bodyChanged = event.action === "opened" ||
+                Boolean(event.changes?.body) ||
+                Boolean(event.changes?.title);
+              if (!bodyChanged) {
+                console.log("Maintenance fields did not change.");
+                return;
+              }
+
+              status = "Maintenance";
+              detail = (issue.body || "A planned maintenance window was published.")
+                .replace(/<!--([\s\S]*?)-->/g, "")
+                .replace(/[#*_]/g, "")
+                .replace(/\n{3,}/g, "\n\n")
+                .trim()
+                .slice(0, 1200);
+            } else {
+              console.log("No status or maintenance change in this event.");
+              return;
+            }
+
+            await sendNotification({
+              eventId: String(
+                event.comment?.id ||
+                (issue.id + "-" + (process.env.GITHUB_SHA || "issue"))
+              ),
               status,
               title: issue.title || "Connect",
               detail,
               issueUrl: issue.html_url || "https://status.belora-connect.com"
-            })
-          }).then(async (response) => {
-            const body = await response.text();
-            console.log(body);
-            if (!response.ok) process.exit(1);
-          }).catch((error) => {
+            });
+          }
+
+          main().catch((error) => {
             console.error(error);
             process.exit(1);
           });
