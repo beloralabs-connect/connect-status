@@ -315,7 +315,7 @@ async function handleNotify(request, env) {
     }
 
     const from = String(
-        env.RESEND_FROM || "Connect Status <status@belora-connect.com>"
+        env.RESEND_FROM || "BeLora Connect <status@belora-connect.com>"
     ).trim();
     const eventId = encodeURIComponent(
         String(input.eventId || Date.now())
