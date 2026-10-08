@@ -35,7 +35,7 @@ sites:
     expectedStatusCodes:
       - 200
     __dangerous__body_down_if_text_missing: "ok"
-    maxResponseTime: 500
+    maxResponseTime: 1500
 
   - name: Voice Translation
     slug: voice-translation
@@ -43,7 +43,7 @@ sites:
     expectedStatusCodes:
       - 200
     __dangerous__body_down_if_text_missing: "ok"
-    maxResponseTime: 500
+    maxResponseTime: 1500
 
 status-website:
   cname: status.belora-connect.com

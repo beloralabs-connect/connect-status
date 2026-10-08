@@ -932,18 +932,25 @@
         var dialog = document.getElementById("status-subscribe-dialog");
         var form = document.getElementById("status-subscribe-form");
         if (!openButton || !dialog) return;
+        var closeDialog = function (restoreFocus) {
+            if (dialog.hidden) return;
+            dialog.hidden = true;
+            openButton.setAttribute("aria-expanded", "false");
+            if (restoreFocus) openButton.focus();
+        };
         openButton.addEventListener("click", function () {
             dialog.hidden = false;
             openButton.setAttribute("aria-expanded", "true");
             var input = document.getElementById("status-subscribe-email");
             if (input) window.setTimeout(function () { input.focus(); }, 50);
         });
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape" && !dialog.hidden) {
-                dialog.hidden = true;
-                openButton.setAttribute("aria-expanded", "false");
-                openButton.focus();
+        document.addEventListener("click", function (event) {
+            if (!dialog.hidden && event.target !== openButton && !openButton.contains(event.target) && !dialog.contains(event.target)) {
+                closeDialog(false);
             }
+        });
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") closeDialog(true);
         });
         dialog.querySelectorAll("[data-subscribe-tab]").forEach(function (tab) {
             tab.addEventListener("click", function () {
