@@ -9,54 +9,24 @@ concurrency:
   group: translation-monitor
   cancel-in-progress: false
 
-permissions:
-  contents: read
-
 jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 3
-
     steps:
-            - name: Run robot over SSH
+      - name: Run robot over SSH
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/monitor_key
-          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/monitor_key
-
-          echo "--- key check"
-          ssh-keygen -y -f ~/.ssh/monitor_key > /dev/null && echo "key OK"
-
-          echo "--- known_hosts (début)"
-          cut -c1-60 ~/.ssh/known_hosts
-
-          echo "--- ssh"
-          ssh -F /dev/null -i ~/.ssh/monitor_key -o IdentitiesOnly=yes \
-            -o UserKnownHostsFile=$HOME/.ssh/known_hosts \
+          install -m 600 /dev/null ~/id_ed25519
+          echo "$SSH_KEY" > ~/id_ed25519
+          echo "$SSH_KNOWN_HOSTS" > ~/known_hosts
+          ssh -F /dev/null -i ~/id_ed25519 \
+            -o UserKnownHostsFile=$HOME/known_hosts \
             -o StrictHostKeyChecking=yes \
             caleb@5.78.157.160 \
-            'cd ~/monitoring && ENV=prod PROD_API_URL=https://api.belora-connect.com ~/api/venv/bin/python ./translation_robot.py'
-
-      - name: Report to Cloudflare Worker
-        if: always()
-        env:
-          REPORT_URL: ${{ secrets.REPORT_URL }}
-          REPORT_SECRET: ${{ secrets.REPORT_SECRET }}
-          OK: ${{ steps.robot.outputs.ok || 'false' }}
-          LATENCY: ${{ steps.robot.outputs.latency || 'null' }}
-        run: |
-          jq -n --argjson ok "$OK" --argjson latency "$LATENCY" \
-            '{ok: $ok, latency: $latency}' |
-          curl -fsS -X POST "$REPORT_URL" \
-            -H "Authorization: Bearer $REPORT_SECRET" \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: gh-monitor/1.0" \
-            --data-binary @-
-
-      - name: Fail the job if the robot failed
-        if: steps.robot.outputs.ok != 'true'
-        run: exit 1
+            'cd ~/monitoring && \
+             ENV=prod \
+             PROD_API_URL=https://api.belora-connect.com \
+             ~/api/venv/bin/python ./translation_robot.py'
