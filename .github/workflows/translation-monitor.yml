@@ -9,12 +9,18 @@ concurrency:
   group: translation-monitor
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
+      - uses: actions/checkout@v4
+
       - name: Run robot over SSH
+        id: robot
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
@@ -22,6 +28,7 @@ jobs:
           install -m 600 /dev/null ~/id_ed25519
           echo "$SSH_KEY" > ~/id_ed25519
           echo "$SSH_KNOWN_HOSTS" > ~/known_hosts
+          set +e
           ssh -F /dev/null -i ~/id_ed25519 \
             -o UserKnownHostsFile=$HOME/known_hosts \
             -o StrictHostKeyChecking=yes \
@@ -29,4 +36,36 @@ jobs:
             'cd ~/monitoring && \
              ENV=prod \
              PROD_API_URL=https://api.belora-connect.com \
-             ~/api/venv/bin/python ./translation_robot.py'
+             ~/api/venv/bin/python ./translation_robot.py' 2>&1 | tee out.txt
+          code=${PIPESTATUS[0]}
+          lat=$(grep -oP 'latency=\K[0-9.]+(?=s)' out.txt | head -1)
+          echo "ok=$([ "$code" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "latency=${lat:-null}" >> "$GITHUB_OUTPUT"
+
+      - name: Save result
+        if: always()
+        env:
+          OK: ${{ steps.robot.outputs.ok || 'false' }}
+          LATENCY: ${{ steps.robot.outputs.latency || 'null' }}
+        run: |
+          mkdir -p translation
+          [ -f translation/history.json ] || echo '[]' > translation/history.json
+          jq --argjson ok "$OK" --argjson latency "$LATENCY" --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '. + [{ts:$ts, ok:$ok, latency:$latency}] | .[-168:]' \
+            translation/history.json > tmp.json && mv tmp.json translation/history.json
+          jq '.[-1]' translation/history.json > translation/latest.json
+
+          echo "### Translation monitor" >> "$GITHUB_STEP_SUMMARY"
+          echo "- OK: **$OK**" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Latency: **$LATENCY s**" >> "$GITHUB_STEP_SUMMARY"
+
+          git config user.name "translation-monitor"
+          git config user.email "actions@users.noreply.github.com"
+          git add translation
+          git commit -m "translation monitor: ok=$OK latency=$LATENCY [skip ci]" || exit 0
+          git pull --rebase
+          git push
+
+      - name: Fail the job if the robot failed
+        if: steps.robot.outputs.ok != 'true'
+        run: exit 1
