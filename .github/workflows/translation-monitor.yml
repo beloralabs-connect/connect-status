@@ -18,28 +18,28 @@ jobs:
     timeout-minutes: 3
 
     steps:
-      - name: Run robot over SSH
-        id: robot
+            - name: Run robot over SSH
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
-          install -m 600 /dev/null "$HOME/id_ed25519"
-          printf '%s\n' "$SSH_KEY" > "$HOME/id_ed25519"
-          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/known_hosts"
-          set +e
-          ssh -F /dev/null -i "$HOME/id_ed25519" \
-            -o UserKnownHostsFile="$HOME/known_hosts" \
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/monitor_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/monitor_key
+
+          echo "--- key check"
+          ssh-keygen -y -f ~/.ssh/monitor_key > /dev/null && echo "key OK"
+
+          echo "--- known_hosts (début)"
+          cut -c1-60 ~/.ssh/known_hosts
+
+          echo "--- ssh"
+          ssh -F /dev/null -i ~/.ssh/monitor_key -o IdentitiesOnly=yes \
+            -o UserKnownHostsFile=$HOME/.ssh/known_hosts \
             -o StrictHostKeyChecking=yes \
             caleb@5.78.157.160 \
-            'cd ~/monitoring && \
-            ENV=prod \
-            PROD_API_URL=https://api.belora-connect.com \
-            ~/api/venv/bin/python ./translation_robot.py' 2>&1 | tee out.txt
-          code=${PIPESTATUS[0]}
-          lat=$(grep -oP 'latency=\K[0-9.]+(?=s)' out.txt | head -1)
-          echo "ok=$([ "$code" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-          echo "latency=${lat:-null}" >> "$GITHUB_OUTPUT"
+            'cd ~/monitoring && ENV=prod PROD_API_URL=https://api.belora-connect.com ~/api/venv/bin/python ./translation_robot.py'
 
       - name: Report to Cloudflare Worker
         if: always()
